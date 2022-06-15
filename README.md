@@ -1,4 +1,4 @@
-<h1>BankPayAPI <img align="center" alt="Csharp" height="30" width="40" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/csharp/csharp-original.svg">
+<h1><img align="center" alt="Csharp" height="30" width="40" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/csharp/csharp-original.svg"> BankPayAPI 
 </h1>
 
 - Essa é uma API simples de cadastro de usuário e conta, que simula uma carteira digital.
