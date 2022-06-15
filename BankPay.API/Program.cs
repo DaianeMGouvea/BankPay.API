@@ -44,14 +44,14 @@ app.MapPut("v1/Users/{id}", async (int id, User user, BankPayApiContext dbContex
 {
     var data = dbContext.Users.FirstOrDefault(u => u.Id == id);
 
-    if(data == null)
+    if (data == null)
     {
         return Results.NotFound();
     }
-    
+
     data.Name = user.Name ?? data.Name;
     data.Phone = user.Phone ?? data.Phone;
-    bool isUpdated = dbContext.SaveChanges() > 0;
+    bool isUpdated = await dbContext.SaveChangesAsync() > 0;
     if (isUpdated)
     {
         return Results.Ok("User has been modified");
@@ -63,12 +63,21 @@ app.MapPut("v1/Users/{id}", async (int id, User user, BankPayApiContext dbContex
 app.MapDelete("v1/Users/{id}", async (int id, BankPayApiContext dbContext) =>
 {
     var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
-    if (user != null)
+
+    if (user == null)
     {
-        dbContext.Users.Remove(user);
-        await dbContext.SaveChangesAsync();
+        return Results.NotFound();
     }
-    return;
+
+    dbContext.Users.Remove(user);
+    bool IsDeleted = await dbContext.SaveChangesAsync() > 0;
+
+    if (IsDeleted)
+    {
+        return Results.Ok("User has been deleted");
+    }
+
+    return Results.BadRequest("User deleted failed");
 });
 
 
@@ -79,6 +88,13 @@ app.MapGet("v1/Accounts", async (BankPayApiContext dbContext) =>
 
 app.MapGet("v1/Accounts/{id}", async (int id, BankPayApiContext dbContext) =>
             await dbContext.Accounts.FirstOrDefaultAsync(a => a.Id == id));
+
+app.MapGet("v1/Accounts/Statement/{id}", async (int id, BankPayApiContext dbContext) =>
+{
+    var data = await dbContext.Accounts.Include(a => a.OcurrenceRecords.OrderBy(o => o.CreatedAt))
+                                       .FirstOrDefaultAsync(a => a.Id == id);
+    return data.Statement().ToList();
+});
 
 
 app.MapPut("v1/Accounts/AddCredit/{id}", async (int id, Account account, BankPayApiContext dbContext) =>
@@ -96,8 +112,14 @@ app.MapPut("v1/Accounts/AddCredit/{id}", async (int id, Account account, BankPay
     }
 
     data.AddCredit(account.Balance);
-    await dbContext.SaveChangesAsync();
-    return Results.Ok($"Credited amount of {account.Balance}. Total amount: {data.Balance}");
+    bool IsSaved = await dbContext.SaveChangesAsync() > 0;
+
+    if (IsSaved)
+    {
+        return Results.Ok($"Credited amount of {account.Balance}. Total amount: {data.Balance}");
+    }
+    
+    return Results.BadRequest("Unexpected error");
 });
 
 app.MapPut("v1/Accounts/Withdraw/{id}", async (int id, Account account, BankPayApiContext dbContext) =>
@@ -115,35 +137,14 @@ app.MapPut("v1/Accounts/Withdraw/{id}", async (int id, Account account, BankPayA
     }
 
     data.Withdraw(account.Balance);
-    await dbContext.SaveChangesAsync();
-    return Results.Ok($"Debit amount of {account.Balance}. Total amount: {data.Balance}");
+    bool IsSaved = await dbContext.SaveChangesAsync() > 0;
+
+    if (IsSaved)
+    {
+        return Results.Ok($"Debit amount of {account.Balance}. Total amount: {data.Balance}");
+    }
+
+    return Results.BadRequest("Unexpected error");
 });
 
-
 app.Run();
-
-
-//var summaries = new[]
-//{
-//    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-//};
-
-//app.MapGet("/dai", () =>
-//{
-//    var forecast = Enumerable.Range(1, 5).Select(index =>
-//        new WeatherForecast
-//        (
-//            DateTime.Now.AddDays(index),
-//            Random.Shared.Next(-20, 55),
-//            summaries[Random.Shared.Next(summaries.Length)]
-//        ))
-//        .ToArray();
-//    return forecast;
-//})
-//.WithName("GetWeatherForecast");
-
-
-//internal record WeatherForecast(DateTime Date, int TemperatureC, string? Summary)
-//{
-//    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-//}

@@ -1,40 +1,45 @@
-﻿namespace BankPay.API.Models
+﻿using BankPay.API.Models.Enums;
+
+namespace BankPay.API.Models
 {
     public class Account
     {
         public int Id { get; private set; }
         public int NumberAccount { get; private set; }
         public double Balance { get; set; } = 0.0;
-        public DateTime OpeningDate { get; private set; } = DateTime.Now;
-
-        
+        public DateTime OpeningAt { get; private set; } = DateTime.Now;
+        public List<OcurrenceRecord> OcurrenceRecords { get; set; }
 
         public Account(int numberAccount)
         {
             NumberAccount = numberAccount;
+            OcurrenceRecords = new List<OcurrenceRecord>();
         }
 
-        public void AddCredit(double credit)
+        public void AddCredit(double amount)
         {   
-            if (credit < 0.0)
+            if (amount < 0.0)
             {
                 return;
             }
-            Balance += credit;
+            Balance += amount;
+            OcurrenceRecords.Add(new OcurrenceRecord(TypeRecord.Credit, amount));
         }
 
-        public void Withdraw(double debit)
+        public void Withdraw(double amount)
         {
-            if ((Balance - debit) <= 0)
+            if ((Balance - amount) <= 0)
             {
                 return;
             }
-            Balance -= debit;
+            Balance -= amount;
+            OcurrenceRecords.Add(new OcurrenceRecord(TypeRecord.Debit, amount));
         }
 
-        public string Statement()
+        public List<Account> Statement()
         {
-            return "extrato";
+            List<Account> statement = new() { { this } };
+            return statement;
         }
 
         public string MonthlyReport(DateTime date)
