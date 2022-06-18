@@ -89,11 +89,41 @@ app.MapGet("v1/Accounts", async (BankPayApiContext dbContext) =>
 app.MapGet("v1/Accounts/{id}", async (int id, BankPayApiContext dbContext) =>
             await dbContext.Accounts.FirstOrDefaultAsync(a => a.Id == id));
 
-app.MapGet("v1/Accounts/Statement/{id}", async (int id, BankPayApiContext dbContext) =>
+app.MapGet("v1/Accounts/Statement/{id}", async (int id, int numberAccount, BankPayApiContext dbContext) =>
 {
     var data = await dbContext.Accounts.Include(a => a.OcurrenceRecords.OrderBy(o => o.CreatedAt))
                                        .FirstOrDefaultAsync(a => a.Id == id);
-    return data.Statement().ToList();
+
+    if (data == null)
+    {
+        return Results.NoContent();
+    }
+
+    if (!(data.NumberAccount == numberAccount))
+    {
+        return Results.BadRequest("Invalid account number!");
+    }
+
+    return Results.Ok(data.Statement().ToList());
+});
+
+app.MapGet("v1/Accounts/OcurrenceRecordYear/{id}", async (int id, int year, int numberAccount, BankPayApiContext dbContext) =>
+{
+
+    var data = await dbContext.Accounts.Include(a => a.OcurrenceRecords.OrderBy(o => o.CreatedAt))
+                                       .FirstOrDefaultAsync(a => a.Id == id);
+
+    if (data == null)
+    {
+        return Results.NoContent();
+    }
+
+    if (!(data.NumberAccount == numberAccount))
+    {
+        return Results.BadRequest("Invalid account number!");
+    }
+
+    return Results.Ok(data.OcurrenceRecordYear(year).ToList());
 });
 
 
@@ -118,7 +148,7 @@ app.MapPut("v1/Accounts/AddCredit/{id}", async (int id, Account account, BankPay
     {
         return Results.Ok($"Credited amount of {account.Balance}. Total amount: {data.Balance}");
     }
-    
+
     return Results.BadRequest("Unexpected error");
 });
 
@@ -146,5 +176,7 @@ app.MapPut("v1/Accounts/Withdraw/{id}", async (int id, Account account, BankPayA
 
     return Results.BadRequest("Unexpected error");
 });
+
+
 
 app.Run();

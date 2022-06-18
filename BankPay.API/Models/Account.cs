@@ -42,10 +42,38 @@ namespace BankPay.API.Models
             return statement;
         }
 
-        public string MonthlyReport(DateTime date)
+        public List<OcurrenceRecordMonth> OcurrenceRecordYear(int year)
         {
-            int dateMonth = date.Month;
-            return $"Relatorio mensal do mês {dateMonth}";
+
+            return ReturnRecordMonth(OcurrenceRecords.Where(o => o.CreatedAt.Year == year));
+        }
+
+        private List<OcurrenceRecordMonth> ReturnRecordMonth(IEnumerable<OcurrenceRecord> recordsYear)
+        {
+            int currentMonth = 0;
+            int index = 0;
+
+            List<OcurrenceRecordMonth> ocurrencesRecordMonth = new();
+
+            foreach (var record in recordsYear)
+            {
+                if (currentMonth == 0)
+                {
+                    currentMonth = record.CreatedAt.Month;
+                    ocurrencesRecordMonth.Add(new(record.CreatedAt.Month));
+                }
+
+                if (currentMonth != record.CreatedAt.Month)
+                {
+                    currentMonth = record.CreatedAt.Month;
+                    ocurrencesRecordMonth.Add(new(record.CreatedAt.Month));
+                    index++;
+
+                }
+
+                ocurrencesRecordMonth[index].Sum(record.Amount, record.TypeRecord);
+            }
+            return ocurrencesRecordMonth;
         }
     }
 
