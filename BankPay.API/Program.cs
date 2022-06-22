@@ -24,8 +24,13 @@ var environment = app.Environment;
 
 app.UseSwagger();
 app.UseSwaggerUI();
-app.UseCors();
 
+app.UseCors(option =>
+{
+    option.AllowAnyHeader();
+    option.AllowAnyMethod();
+    option.AllowAnyOrigin();
+});
 
 
 // Users ---------------------------------------------------
