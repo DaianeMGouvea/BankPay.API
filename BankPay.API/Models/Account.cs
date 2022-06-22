@@ -8,7 +8,7 @@ namespace BankPay.API.Models
         public int NumberAccount { get; private set; }
         public double Balance { get; set; } = 0.0;
         public DateTime OpeningAt { get; private set; } = DateTime.Now;
-        public List<OcurrenceRecord> OcurrenceRecords { get; set; }
+        public ICollection<OcurrenceRecord> OcurrenceRecords { get; set; }
 
         public Account(int numberAccount)
         {
@@ -36,26 +36,26 @@ namespace BankPay.API.Models
             OcurrenceRecords.Add(new OcurrenceRecord(TypeRecord.Debit, amount));
         }
 
-        public List<Account> Statement()
+        public ICollection<Account> Statement()
         {
             List<Account> statement = new() { { this } };
             return statement;
         }
 
-        public List<OcurrenceRecordMonth> OcurrenceRecordYear(int year)
+        public ICollection<OcurrenceRecordMonth> OcurrenceRecordYear(int year)
         {
 
             return ReturnRecordMonth(OcurrenceRecords.Where(o => o.CreatedAt.Year == year));
         }
 
-        private List<OcurrenceRecordMonth> ReturnRecordMonth(IEnumerable<OcurrenceRecord> recordsYear)
+        private ICollection<OcurrenceRecordMonth> ReturnRecordMonth(IEnumerable<OcurrenceRecord> FilteredRecords)
         {
             int currentMonth = 0;
             int index = 0;
 
             List<OcurrenceRecordMonth> ocurrencesRecordMonth = new();
 
-            foreach (var record in recordsYear)
+            foreach (var record in FilteredRecords)
             {
                 if (currentMonth == 0)
                 {
@@ -71,7 +71,7 @@ namespace BankPay.API.Models
 
                 }
 
-                ocurrencesRecordMonth[index].Sum(record.Amount, record.TypeRecord);
+                ocurrencesRecordMonth[index].BalanceMonth(record.Amount, record.TypeRecord);
             }
             return ocurrencesRecordMonth;
         }

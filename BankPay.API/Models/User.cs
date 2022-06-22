@@ -1,8 +1,12 @@
-﻿namespace BankPay.API.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace BankPay.API.Models
 {
     public class User
     {
         public int Id { get; private set; }
+
+        [Required(ErrorMessage = "Name is required")]
         public string Name { get; set; }
         public string Phone { get; set; }
         public Account Account { get; private set; }

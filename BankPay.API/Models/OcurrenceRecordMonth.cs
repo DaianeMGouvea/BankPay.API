@@ -14,7 +14,7 @@ namespace BankPay.API.Models
             Month = month;
         }
 
-        public void Sum(double amount, TypeRecord typeRecord)
+        public void BalanceMonth(double amount, TypeRecord typeRecord)
         {
             if (TypeRecord.Credit == typeRecord)
             {

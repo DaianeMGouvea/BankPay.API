@@ -32,12 +32,12 @@ app.MapGet("v1/Users/{id}", async (int id, BankPayApiContext dbContext) =>
             await dbContext.Users.Include(u => u.Account)
                                  .FirstOrDefaultAsync(u => u.Id == id));
 
-
 app.MapPost("v1/Users", async (User user, BankPayApiContext dbContext) =>
 {
     dbContext.Users.Add(user);
     await dbContext.SaveChangesAsync();
     return user;
+
 });
 
 app.MapPut("v1/Users/{id}", async (int id, User user, BankPayApiContext dbContext) =>
