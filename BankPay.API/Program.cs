@@ -1,5 +1,6 @@
 using BankPay.API.Data;
 using BankPay.API.Models;
+using BankPay.API.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,32 +9,36 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCors();
 
 builder.Services.AddDbContext<BankPayApiContext>(options => options.UseInMemoryDatabase("BankPayApiDatabase"));
 builder.Services.AddScoped<BankPayApiContext, BankPayApiContext>();
+builder.Services.AddTransient<IUsersRepository, UsersRepository>();
+
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 
+var environment = app.Environment;
+
 app.UseSwagger();
 app.UseSwaggerUI();
+app.UseCors();
+
 
 
 // Users ---------------------------------------------------
 
-app.MapGet("v1/Users", async (BankPayApiContext dbContext) =>
-            await dbContext.Users.Include(u => u.Account)
-                                 .ToListAsync());
+app.MapGet("v1/Users", async (IUsersRepository usersRepository) =>
+            await usersRepository.GetUsers());
 
-app.MapGet("v1/Users/{id}", async (int id, BankPayApiContext dbContext) =>
-            await dbContext.Users.Include(u => u.Account)
-                                 .FirstOrDefaultAsync(u => u.Id == id));
+app.MapGet("v1/Users/{id}", async (int id, IUsersRepository usersRepository) =>
+            await usersRepository.FindBy(id));
 
-app.MapPost("v1/Users", async (User user, BankPayApiContext dbContext) =>
+app.MapPost("v1/Users", async (User user, IUsersRepository usersRepository) =>
 {
-    dbContext.Users.Add(user);
-    await dbContext.SaveChangesAsync();
+    await usersRepository.AddUser(user);
     return user;
 
 });
