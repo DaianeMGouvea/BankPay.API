@@ -14,6 +14,7 @@ builder.Services.AddCors();
 builder.Services.AddDbContext<BankPayApiContext>(options => options.UseInMemoryDatabase("BankPayApiDatabase"));
 builder.Services.AddScoped<BankPayApiContext, BankPayApiContext>();
 builder.Services.AddTransient<IUsersRepository, UsersRepository>();
+builder.Services.AddTransient<IAccountsRepository, AccountsRepository>();
 
 
 var app = builder.Build();
@@ -36,68 +37,99 @@ app.UseCors(option =>
 // Users ---------------------------------------------------
 
 app.MapGet("v1/Users", async (IUsersRepository usersRepository) =>
-            await usersRepository.GetUsers());
+{
+    var user = await usersRepository.GetUsers(); 
+    return user is not null ? Results.Ok(user) : Results.NotFound();
+});
+
 
 app.MapGet("v1/Users/{id}", async (int id, IUsersRepository usersRepository) =>
-            await usersRepository.FindBy(id));
+{
+    var findBy = await usersRepository.FindBy(id);
+    return findBy is not null ? Results.Ok(findBy) : Results.NotFound();
+});
 
 app.MapPost("v1/Users", async (User user, IUsersRepository usersRepository) =>
 {
     await usersRepository.AddUser(user);
     return user;
-
 });
 
-app.MapPut("v1/Users/{id}", async (int id, User user, BankPayApiContext dbContext) =>
+app.MapPut("v1/Users/{id}", async (int id, User user, IUsersRepository usersRepository) =>
 {
-    var data = dbContext.Users.FirstOrDefault(u => u.Id == id);
-
-    if (data == null)
-    {
+    if (user == null)
         return Results.NotFound();
-    }
 
-    data.Name = user.Name ?? data.Name;
-    data.Phone = user.Phone ?? data.Phone;
-    bool isUpdated = await dbContext.SaveChangesAsync() > 0;
-    if (isUpdated)
-    {
-        return Results.Ok("User has been modified");
-    }
-    return Results.BadRequest("User modified failed");
+    var data = usersRepository.Update(user);
+
+    int update = await usersRepository.Update(user);
+
+    return update > 0 ? Results.Ok("User has been modified") : Results.BadRequest("Unexpected error! User modified failed");
 
 });
 
-app.MapDelete("v1/Users/{id}", async (int id, BankPayApiContext dbContext) =>
+app.MapDelete("v1/Users/{id}", async (int id, IUsersRepository usersRepository) =>
 {
-    var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
+    var user = await usersRepository.FindBy(id);
 
     if (user == null)
     {
         return Results.NotFound();
     }
 
-    dbContext.Users.Remove(user);
-    bool IsDeleted = await dbContext.SaveChangesAsync() > 0;
+    var Deleted = usersRepository.Delete(user);
 
-    if (IsDeleted)
-    {
-        return Results.Ok("User has been deleted");
-    }
-
-    return Results.BadRequest("User deleted failed");
+    return await Deleted > 0 ? Results.Ok("User has been deleted") : Results.BadRequest("Unexpected error! User deleted failed");
 });
 
 
 // Accounts ---------------------------------------------------
 
-app.MapGet("v1/Accounts", async (BankPayApiContext dbContext) =>
-            await dbContext.Accounts.ToListAsync());
+app.MapGet("v1/Accounts", async (IAccountsRepository accountRepository) =>
+{
+    var account = await accountRepository.GetAccounts();
+    return account is not null ? Results.Ok(account) : Results.NotFound();
+});
 
-app.MapGet("v1/Accounts/{id}", async (int id, BankPayApiContext dbContext) =>
-            await dbContext.Accounts.FirstOrDefaultAsync(a => a.Id == id));
+app.MapGet("v1/Accounts/{id}", async (int id, IAccountsRepository accountRepository) =>
+            await accountRepository.FindBy(id));
 
-app.MapGet("v1/Accounts/Statement/{id}", async (int id, int numberAccount, BankPayApiContext dbContext) =>
+app.MapPut("v1/Accounts/AddCredit/{id}", async (int id, Account account, IAccountsRepository accountRepository) =>
+{
+    var data = await accountRepository.FindBy(id);
+
+    if (data == null)
+        return Results.NotFound();
+
+    var accountValid  = await accountRepository.CheckNumberAccount(account.NumberAccount);
+    if (accountValid is null)
+        return Results.BadRequest("Invalid account number!");
+
+    var addCredit = await accountRepository.AddCredit(accountValid, account.Balance);
+    return addCredit > 0 ? Results.Ok(accountValid) : Results.BadRequest("Unexpected error! Add Credits failed!");
+
+});
+
+app.MapPut("v1/Accounts/Withdraw/{id}", async (int id, Account account, IAccountsRepository accountRepository) =>
+{
+    var data = await accountRepository.FindBy(id);
+
+    if (data == null)
+        return Results.NotFound();
+
+    var accountValid = await accountRepository.CheckNumberAccount(account.NumberAccount);
+    if (accountValid is null)
+        return Results.BadRequest("Invalid account number!");
+
+
+    var withdraw = await accountRepository.Withdraw(accountValid, account.Balance);
+    return withdraw > 0 ? Results.Ok(accountValid) : Results.BadRequest("Unexpected error! Add Credits failed!");
+
+});
+
+// OcurrenceRecords
+
+app.MapGet("v1/OcurrencesRecord/Statement/{id}", async (int id, int numberAccount, BankPayApiContext dbContext) =>
 {
     var data = await dbContext.Accounts.Include(a => a.OcurrenceRecords.OrderBy(o => o.CreatedAt))
                                        .FirstOrDefaultAsync(a => a.Id == id);
@@ -115,7 +147,7 @@ app.MapGet("v1/Accounts/Statement/{id}", async (int id, int numberAccount, BankP
     return Results.Ok(data.Statement().ToList());
 });
 
-app.MapGet("v1/Accounts/OcurrenceRecordYear/{id}", async (int id, int year, int numberAccount, BankPayApiContext dbContext) =>
+app.MapGet("v1/OcurrencesRecord/OcurrencesRecordYear/{id}", async (int id, int year, int numberAccount, BankPayApiContext dbContext) =>
 {
 
     var data = await dbContext.Accounts.Include(a => a.OcurrenceRecords.OrderBy(o => o.CreatedAt))
@@ -135,55 +167,9 @@ app.MapGet("v1/Accounts/OcurrenceRecordYear/{id}", async (int id, int year, int 
 });
 
 
-app.MapPut("v1/Accounts/AddCredit/{id}", async (int id, Account account, BankPayApiContext dbContext) =>
-{
-    var data = dbContext.Accounts.FirstOrDefault(u => u.Id == id);
 
-    if (data == null)
-    {
-        return Results.NotFound();
-    }
 
-    if (!(data.NumberAccount == account.NumberAccount))
-    {
-        return Results.BadRequest("Invalid account number!");
-    }
 
-    data.AddCredit(account.Balance);
-    bool IsSaved = await dbContext.SaveChangesAsync() > 0;
-
-    if (IsSaved)
-    {
-        return Results.Ok($"Credited amount of {account.Balance}. Total amount: {data.Balance}");
-    }
-
-    return Results.BadRequest("Unexpected error");
-});
-
-app.MapPut("v1/Accounts/Withdraw/{id}", async (int id, Account account, BankPayApiContext dbContext) =>
-{
-    var data = dbContext.Accounts.FirstOrDefault(u => u.Id == id);
-
-    if (data == null)
-    {
-        return Results.NotFound();
-    }
-
-    if (!(data.NumberAccount == account.NumberAccount))
-    {
-        return Results.BadRequest("Invalid account number!");
-    }
-
-    data.Withdraw(account.Balance);
-    bool IsSaved = await dbContext.SaveChangesAsync() > 0;
-
-    if (IsSaved)
-    {
-        return Results.Ok($"Debit amount of {account.Balance}. Total amount: {data.Balance}");
-    }
-
-    return Results.BadRequest("Unexpected error");
-});
 
 
 

@@ -16,15 +16,7 @@ namespace BankPay.API.Models
             OcurrenceRecords = new List<OcurrenceRecord>();
         }
 
-        public void AddCredit(double amount)
-        {   
-            if (amount < 0.0)
-            {
-                return;
-            }
-            Balance += amount;
-            OcurrenceRecords.Add(new OcurrenceRecord(TypeRecord.Credit, amount));
-        }
+        
 
         public void Withdraw(double amount)
         {

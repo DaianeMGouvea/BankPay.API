@@ -20,21 +20,19 @@ namespace BankPay.API.Repositories
             return await _bankContext.Users.ToListAsync();
         }
 
-        public async void Update(User user)
+        public async Task<int> Update(User user)
         {
             _bankContext.Users.Update(user);
-            _bankContext.SaveChanges();
-
-            await _bankContext.Users.Where(u => u.Id == user.Id)
-                              .FirstOrDefaultAsync(); 
+            return await _bankContext.SaveChangesAsync(); 
         }
 
-        public void Delete(User user)
+        public async Task<int> Delete(User user)
         {
-            throw new NotImplementedException();
+            _bankContext.Users.Remove(user);
+            return await _bankContext.SaveChangesAsync();
         }    
 
-        public async Task<User> FindBy(int key)
+        public async Task<User>? FindBy(int key)
         {
             return await _bankContext.Users.Include(u => u.Account)
                                            .FirstOrDefaultAsync(u => u.Id == key);
@@ -46,5 +44,6 @@ namespace BankPay.API.Repositories
                                            .ToListAsync();
         }
 
+   
     }
 }
