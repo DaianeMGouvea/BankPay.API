@@ -3,7 +3,7 @@ using BankPay.API.Models;
 using BankPay.API.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 
-namespace BankPay.API.Repositories
+namespace BankPay.API.Repositories.AccountRepository
 {
     public class AccountsRepository : IAccountsRepository
     {
@@ -31,16 +31,16 @@ namespace BankPay.API.Repositories
             return await _bankContext.SaveChangesAsync();
         }
 
-        public async Task<ICollection<Account>> GetAccounts() =>
+        public async Task<ICollection<Account>>? GetAccounts() =>
             await _bankContext.Accounts.ToListAsync();
-      
-        public async Task<Account> FindBy(int id) =>
+
+        public async Task<Account>? FindBy(int id) =>
             await _bankContext.Accounts.FirstOrDefaultAsync(a => a.Id == id);
-              
-        public async Task<Account> CheckNumberAccount(int numberAccount) =>
+
+        public async Task<Account>? CheckNumberAccount(int numberAccount) =>
             await _bankContext.Accounts.FirstOrDefaultAsync(a => a.NumberAccount == numberAccount);
 
-        
-                   
+
+
     }
 }
