@@ -95,16 +95,16 @@ app.MapGet("v1/Accounts", async (IAccountsRepository accountRepository) =>
 });
 
 app.MapGet("v1/Accounts/{id}", async (int id, IAccountsRepository accountRepository) =>
-            await accountRepository.FindBy(id));
+    await accountRepository.FindById(id));
 
 app.MapPut("v1/Accounts/AddCredit/{id}", async (int id, Account account, IAccountsRepository accountRepository) =>
 {
-    var data = await accountRepository.FindBy(id);
+    var data = await accountRepository.FindById(id);
 
     if (data == null)
         return Results.NotFound();
 
-    var accountValid = await accountRepository.CheckNumberAccount(account.NumberAccount);
+    var accountValid = await accountRepository.FindByNumberAccount(account.NumberAccount);
     if (accountValid is null)
         return Results.BadRequest("Invalid account number!");
 
@@ -114,12 +114,12 @@ app.MapPut("v1/Accounts/AddCredit/{id}", async (int id, Account account, IAccoun
 
 app.MapPut("v1/Accounts/Withdraw/{id}", async (int id, Account account, IAccountsRepository accountRepository) =>
 {
-    var data = await accountRepository.FindBy(id);
+    var data = await accountRepository.FindById(id);
 
     if (data == null)
         return Results.NotFound();
 
-    var accountValid = await accountRepository.CheckNumberAccount(account.NumberAccount);
+    var accountValid = await accountRepository.FindByNumberAccount(account.NumberAccount);
     if (accountValid is null)
         return Results.BadRequest("Invalid account number!");
 
@@ -132,38 +132,45 @@ app.MapPut("v1/Accounts/Withdraw/{id}", async (int id, Account account, IAccount
 
 app.MapGet("v1/OcurrencesRecord/Statement/{id}", async (int id, int numberAccount, IOcorrenceRecordRepository ocorrenceRecord) =>
 {
-    var data = ocorrenceRecord.Statement();
+    if (ocorrenceRecord.FindByNumberAccount(numberAccount) is null)
+       return Results.BadRequest("Invalid account number!");
 
-    if (data == null)
-    {
-        return Results.NoContent();
-    }
-
-    if (!(data.NumberAccount == numberAccount))
-    {
-        return Results.BadRequest("Invalid account number!");
-    }
-
-    return Results.Ok(data.Statement().ToList());
+    var data = await ocorrenceRecord.Statement();
+        
+    return data is not null ? Results.Ok(data) : Results.NoContent();
 });
 
-app.MapGet("v1/OcurrencesRecord/OcurrencesRecordYear/{id}", async (int id, int year, int numberAccount, BankPayApiContext dbContext) =>
+app.MapGet("v1/OcurrencesRecord/OcurrencesRecordYear/{id}", async (int id, int year, int numberAccount, IOcorrenceRecordRepository ocorrenceRecord) =>
 {
-
-    var data = await dbContext.Accounts.Include(a => a.OcurrenceRecords.OrderBy(o => o.CreatedAt))
-                                       .FirstOrDefaultAsync(a => a.Id == id);
-
-    if (data == null)
-    {
-        return Results.NoContent();
-    }
-
-    if (!(data.NumberAccount == numberAccount))
-    {
+    if (ocorrenceRecord.FindByNumberAccount(numberAccount) is null)
         return Results.BadRequest("Invalid account number!");
+
+    var data = await ocorrenceRecord.OcurrencesRecordYear(year);
+
+    int currentMonth = 0;
+    int index = 0;
+
+    List<OcurrenceRecordMonth> ocurrencesRecordMonth = new();
+
+    foreach (var record in data)
+    {
+        if (currentMonth == 0)
+        {
+            currentMonth = record.CreatedAt.Month;
+            ocurrencesRecordMonth.Add(new(record.CreatedAt.Month));
+        }
+
+        if (currentMonth != record.CreatedAt.Month)
+        {
+            currentMonth = record.CreatedAt.Month;
+            ocurrencesRecordMonth.Add(new(record.CreatedAt.Month));
+            index++;
+        }
+
+        ocurrencesRecordMonth[index].MonthBalance(record.Amount, record.TypeRecord);
     }
 
-    return Results.Ok(data.OcurrenceRecordYear(year).ToList());
+    return ocurrencesRecordMonth is not null ? Results.Ok(ocurrencesRecordMonth) : Results.NoContent();
 });
 
 app.Run();

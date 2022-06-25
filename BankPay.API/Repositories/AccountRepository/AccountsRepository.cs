@@ -19,7 +19,7 @@ namespace BankPay.API.Repositories.AccountRepository
         {
             account.Balance += amount;
 
-            _bankContext.OcurrenceRecords.Add(new OcurrenceRecord(TypeRecord.Credit, amount));
+            _bankContext.OcurrenceRecords.Add(new OcurrenceRecord(TypeRecord.Credit, amount, account.Id)); // nao tenho certeza se crio como objeto aqui 
             return await _bankContext.SaveChangesAsync();
         }
 
@@ -27,17 +27,17 @@ namespace BankPay.API.Repositories.AccountRepository
         {
             account.Balance -= amount;
 
-            _bankContext.OcurrenceRecords.Add(new OcurrenceRecord(TypeRecord.Debit, amount));
+            _bankContext.OcurrenceRecords.Add(new OcurrenceRecord(TypeRecord.Debit, amount, account.Id)); // nao tenho certeza se crio como objeto aqui
             return await _bankContext.SaveChangesAsync();
         }
 
         public async Task<ICollection<Account>>? GetAccounts() =>
             await _bankContext.Accounts.ToListAsync();
 
-        public async Task<Account>? FindBy(int id) =>
+        public async Task<Account>? FindById(int id) =>
             await _bankContext.Accounts.FirstOrDefaultAsync(a => a.Id == id);
 
-        public async Task<Account>? CheckNumberAccount(int numberAccount) =>
+        public async Task<Account>? FindByNumberAccount(int numberAccount) =>
             await _bankContext.Accounts.FirstOrDefaultAsync(a => a.NumberAccount == numberAccount);
 
 

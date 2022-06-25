@@ -6,9 +6,9 @@ namespace BankPay.API.Repositories.AccountRepository
     {
         Task<int> AddCredit(Account account, double amount);
         Task<int> Withdraw(Account account, double amount);
-        Task<Account>? FindBy(int id);
         Task<ICollection<Account>>? GetAccounts();
-        Task<Account>? CheckNumberAccount(int numberAccount);
+        Task<Account>? FindById(int id);
+        Task<Account>? FindByNumberAccount(int numberAccount);
 
     }
 }

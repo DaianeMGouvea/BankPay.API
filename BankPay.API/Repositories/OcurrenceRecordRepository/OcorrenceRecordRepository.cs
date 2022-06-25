@@ -12,18 +12,20 @@ namespace BankPay.API.Repositories.OcurrenceRecordRepository
         {
             _bankContext = bankContext;
         }
-        public async Task<ICollection<OcurrenceRecord>> GetOcurrenceRecords() =>
+
+        public async Task<ICollection<OcurrenceRecord>> GetOcurrencesRecord() =>
             await _bankContext.OcurrenceRecords.ToListAsync();
 
         public async Task<ICollection<OcurrenceRecord>> Statement() =>
-            await GetOcurrenceRecords();
+            await GetOcurrencesRecord();
 
-
-        public async Task<ICollection<OcurrenceRecord>> OcurrenceRecordYear(int year)
+        public async Task<ICollection<OcurrenceRecord>> OcurrencesRecordYear(int year)
         {
-            return null;
+            var filteredYear = await _bankContext.OcurrenceRecords.Where(o => o.CreatedAt.Year == year).ToListAsync();
+            return filteredYear; 
         }
-            
-
+        
+        public async Task<Account>? FindByNumberAccount(int numberAccount) =>
+            await _bankContext.Accounts.FirstOrDefaultAsync(a => a.NumberAccount == numberAccount);
     }
 }
