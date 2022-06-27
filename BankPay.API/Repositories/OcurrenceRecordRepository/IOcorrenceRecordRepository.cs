@@ -4,9 +4,10 @@ namespace BankPay.API.Repositories.OcurrenceRecordRepository
 {
     public interface IOcorrenceRecordRepository
     {
-        Task<ICollection<OcurrenceRecord>> GetOcurrencesRecord();
-        Task<ICollection<OcurrenceRecord>> Statement();
+        Task<ICollection<OcurrenceRecord>> GetOcurrencesRecord(int id);
+        Task<ICollection<OcurrenceRecord>> Statement(int id);
         Task<ICollection<OcurrenceRecord>> OcurrencesRecordYear(int year);
-        Task<Account>? FindByNumberAccount(int numberAccount);
+        Task<Account>? FindAccountById(int id);
+        Task<Account>? AccountValid(int id, int numberAccount);
     }
 }

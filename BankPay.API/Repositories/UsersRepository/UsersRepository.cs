@@ -13,6 +13,13 @@ namespace BankPay.API.Repositories.UsersRepository
             _bankContext = bankContext;
         }
 
+        public async Task<bool> UserExist(User user)
+        {        
+            var a = await _bankContext.Users.Where(u => u.Name == user.Name)
+                                            .Where(u => u.Account.Id == user.Account.Id).ToListAsync();
+            return a.Any();
+        }
+
         public async Task<ICollection<User>> AddUser(User user)
         {
             _bankContext.Add(user);
