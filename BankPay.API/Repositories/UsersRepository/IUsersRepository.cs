@@ -4,6 +4,7 @@ namespace BankPay.API.Repositories.UsersRepository
 {
     public interface IUsersRepository
     {
+        Task<bool> UserExist(User user);
         Task<ICollection<User>> AddUser(User user);
         Task<int> Update(User user);
         Task<int> Delete(User id);

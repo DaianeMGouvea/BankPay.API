@@ -54,6 +54,10 @@ app.MapGet("v1/Users/{id}", async (int id, IUsersRepository usersRepository) =>
 
 app.MapPost("v1/Users", async (User user, IUsersRepository usersRepository) =>
 {
+    //bool userExist = await usersRepository.UserExist(user);
+    //if (userExist)
+    //    return Results.BadRequest("User already registered!");
+
     await usersRepository.AddUser(user);
     return user;
 });
@@ -62,8 +66,6 @@ app.MapPut("v1/Users/{id}", async (int id, User user, IUsersRepository usersRepo
 {
     if (user == null)
         return Results.NotFound();
-
-    var data = usersRepository.Update(user);
 
     int update = await usersRepository.Update(user);
 
@@ -76,9 +78,7 @@ app.MapDelete("v1/Users/{id}", async (int id, IUsersRepository usersRepository) 
     var user = await usersRepository.FindBy(id);
 
     if (user == null)
-    {
         return Results.NotFound();
-    }
 
     var Deleted = usersRepository.Delete(user);
 
@@ -100,11 +100,10 @@ app.MapGet("v1/Accounts/{id}", async (int id, IAccountsRepository accountReposit
 app.MapPut("v1/Accounts/AddCredit/{id}", async (int id, Account account, IAccountsRepository accountRepository) =>
 {
     var data = await accountRepository.FindById(id);
-
     if (data == null)
         return Results.NotFound();
 
-    var accountValid = await accountRepository.FindByNumberAccount(account.NumberAccount);
+    var accountValid = await accountRepository.AccountValid(data.Id, account.NumberAccount);
     if (accountValid is null)
         return Results.BadRequest("Invalid account number!");
 
@@ -115,11 +114,10 @@ app.MapPut("v1/Accounts/AddCredit/{id}", async (int id, Account account, IAccoun
 app.MapPut("v1/Accounts/Withdraw/{id}", async (int id, Account account, IAccountsRepository accountRepository) =>
 {
     var data = await accountRepository.FindById(id);
-
     if (data == null)
         return Results.NotFound();
 
-    var accountValid = await accountRepository.FindByNumberAccount(account.NumberAccount);
+    var accountValid = await accountRepository.AccountValid(data.Id, account.NumberAccount);
     if (accountValid is null)
         return Results.BadRequest("Invalid account number!");
 
@@ -130,23 +128,36 @@ app.MapPut("v1/Accounts/Withdraw/{id}", async (int id, Account account, IAccount
 
 // OcurrenceRecords ------------------------------------------------------------------------------
 
-app.MapGet("v1/OcurrencesRecord/Statement/{id}", async (int id, int numberAccount, IOcorrenceRecordRepository ocorrenceRecord) =>
+app.MapGet("v1/Accounts/{idAccount}/OcurrencesRecord/Statement", async (int idAccount, int numberAccount, IOcorrenceRecordRepository ocorrenceRecord) =>
 {
-    if (ocorrenceRecord.FindByNumberAccount(numberAccount) is null)
-       return Results.BadRequest("Invalid account number!");
+    var account = await ocorrenceRecord.FindAccountById(idAccount);
+    if (account == null)
+        return Results.NotFound();
 
-    var data = await ocorrenceRecord.Statement();
+    var accountValid = await ocorrenceRecord.AccountValid(account.Id, numberAccount);
+    if (accountValid is null)
+        return Results.BadRequest("Invalid account number!");
+
+    var statement = await ocorrenceRecord.Statement(idAccount);
         
-    return data is not null ? Results.Ok(data) : Results.NoContent();
+    return statement is not null ? Results.Ok(statement) : Results.NoContent();
 });
 
-app.MapGet("v1/OcurrencesRecord/OcurrencesRecordYear/{id}", async (int id, int year, int numberAccount, IOcorrenceRecordRepository ocorrenceRecord) =>
+app.MapGet("v1/Accounts/{idAccount}/OcurrencesRecord/OcurrencesRecordYear/{id}", async (int id, int year, int numberAccount, IOcorrenceRecordRepository ocorrenceRecord) =>
 {
-    if (ocorrenceRecord.FindByNumberAccount(numberAccount) is null)
+    var account = await ocorrenceRecord.FindAccountById(id);
+    if (account == null)
+        return Results.NotFound();
+
+    var accountValid = await ocorrenceRecord.AccountValid(account.Id, numberAccount);
+    if (accountValid is null)
         return Results.BadRequest("Invalid account number!");
 
     var data = await ocorrenceRecord.OcurrencesRecordYear(year);
 
+    if (data is null)
+        return Results.NoContent();
+    
     int currentMonth = 0;
     int index = 0;
 
@@ -172,5 +183,7 @@ app.MapGet("v1/OcurrencesRecord/OcurrencesRecordYear/{id}", async (int id, int y
 
     return ocurrencesRecordMonth is not null ? Results.Ok(ocurrencesRecordMonth) : Results.NoContent();
 });
+
+
 
 app.Run();
