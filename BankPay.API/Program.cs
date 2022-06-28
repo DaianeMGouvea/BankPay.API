@@ -143,9 +143,9 @@ app.MapGet("v1/Accounts/{idAccount}/OcurrencesRecord/Statement", async (int idAc
     return statement is not null ? Results.Ok(statement) : Results.NoContent();
 });
 
-app.MapGet("v1/Accounts/{idAccount}/OcurrencesRecord/OcurrencesRecordYear/{id}", async (int id, int year, int numberAccount, IOcorrenceRecordRepository ocorrenceRecord) =>
+app.MapGet("v1/Accounts/{idAccount}/OcurrencesRecord/OcurrencesRecordYear", async (int idAccount, int year, int numberAccount, IOcorrenceRecordRepository ocorrenceRecord) =>
 {
-    var account = await ocorrenceRecord.FindAccountById(id);
+    var account = await ocorrenceRecord.FindAccountById(idAccount);
     if (account == null)
         return Results.NotFound();
 
