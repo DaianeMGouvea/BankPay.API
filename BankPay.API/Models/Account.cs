@@ -16,12 +16,12 @@ namespace BankPay.API.Models
         public double Balance { get; set; } = 0.0;
 
         public DateTime OpeningAt { get; private set; } = DateTime.Now;
-        public ICollection<OcurrenceRecord> OcurrenceRecords { get; set; }
+        public ICollection<OcurrenceRecord> OccurrenceRecords { get; set; }
 
         public Account(int numberAccount)
         {
             NumberAccount = numberAccount;
-            OcurrenceRecords = new List<OcurrenceRecord>();
+            OccurrenceRecords = new List<OcurrenceRecord>();
         }
        
     }

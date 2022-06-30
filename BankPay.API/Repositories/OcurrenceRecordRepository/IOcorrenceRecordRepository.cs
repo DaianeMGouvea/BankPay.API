@@ -1,13 +1,14 @@
 ﻿using BankPay.API.Models;
 
-namespace BankPay.API.Repositories.OcurrenceRecordRepository
+namespace BankPay.API.Repositories.OccurrenceRecordRepository
 {
-    public interface IOcorrenceRecordRepository
+    public interface IOccurrenceRecordRepository
     {
         Task<ICollection<OcurrenceRecord>> GetOcurrencesRecord(int id);
         Task<ICollection<OcurrenceRecord>> Statement(int id);
-        Task<ICollection<OcurrenceRecord>> OcurrencesRecordYear(int year);
         Task<Account>? FindAccountById(int id);
         Task<Account>? AccountValid(int id, int numberAccount);
+        Task<ICollection<OcurrenceRecord>> FilterYear(int year, Account account);
+        ICollection<dynamic> FilterMonth(ICollection<OcurrenceRecord> listOccurrenceRecords);
     }
 }

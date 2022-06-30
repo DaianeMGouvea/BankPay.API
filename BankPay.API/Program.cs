@@ -1,7 +1,7 @@
 using BankPay.API.Data;
 using BankPay.API.Models;
 using BankPay.API.Repositories.AccountRepository;
-using BankPay.API.Repositories.OcurrenceRecordRepository;
+using BankPay.API.Repositories.OccurrenceRecordRepository;
 using BankPay.API.Repositories.UsersRepository;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,7 +17,7 @@ builder.Services.AddDbContext<BankPayApiContext>(options => options.UseInMemoryD
 builder.Services.AddScoped<BankPayApiContext, BankPayApiContext>();
 builder.Services.AddTransient<IUsersRepository, UsersRepository>();
 builder.Services.AddTransient<IAccountsRepository, AccountsRepository>();
-builder.Services.AddTransient<IOcorrenceRecordRepository, OcorrenceRecordRepository>();
+builder.Services.AddTransient<IOccurrenceRecordRepository, OccurrenceRecordRepository>();
 
 
 var app = builder.Build();
@@ -126,9 +126,9 @@ app.MapPut("v1/Accounts/Withdraw/{id}", async (int id, Account account, IAccount
     return withdraw > 0 ? Results.Ok(accountValid) : Results.BadRequest("Unexpected error! Add Credits failed!");
 });
 
-// OcurrenceRecords ------------------------------------------------------------------------------
+// OccurrenceRecords ------------------------------------------------------------------------------
 
-app.MapGet("v1/Accounts/{idAccount}/OcurrencesRecord/Statement", async (int idAccount, int numberAccount, IOcorrenceRecordRepository ocorrenceRecord) =>
+app.MapGet("v1/Accounts/{idAccount}/OcurrencesRecord/Statement", async (int idAccount, int numberAccount, IOccurrenceRecordRepository ocorrenceRecord) =>
 {
     var account = await ocorrenceRecord.FindAccountById(idAccount);
     if (account == null)
@@ -143,7 +143,7 @@ app.MapGet("v1/Accounts/{idAccount}/OcurrencesRecord/Statement", async (int idAc
     return statement is not null ? Results.Ok(statement) : Results.NoContent();
 });
 
-app.MapGet("v1/Accounts/{idAccount}/OcurrencesRecord/OcurrencesRecordYear", async (int idAccount, int year, int numberAccount, IOcorrenceRecordRepository ocorrenceRecord) =>
+app.MapGet("v1/Accounts/{idAccount}/OccurrenceRecord/OccurrenceRecordsYear", async (int idAccount, int year, int numberAccount, IOccurrenceRecordRepository ocorrenceRecord) =>
 {
     var account = await ocorrenceRecord.FindAccountById(idAccount);
     if (account == null)
@@ -153,35 +153,10 @@ app.MapGet("v1/Accounts/{idAccount}/OcurrencesRecord/OcurrencesRecordYear", asyn
     if (accountValid is null)
         return Results.BadRequest("Invalid account number!");
 
-    var data = await ocorrenceRecord.OcurrencesRecordYear(year);
-
-    if (data is null)
-        return Results.NoContent();
-    
-    int currentMonth = 0;
-    int index = 0;
-
-    List<OcurrenceRecordMonth> ocurrencesRecordMonth = new();
-
-    foreach (var record in data)
-    {
-        if (currentMonth == 0)
-        {
-            currentMonth = record.CreatedAt.Month;
-            ocurrencesRecordMonth.Add(new(record.CreatedAt.Month));
-        }
-
-        if (currentMonth != record.CreatedAt.Month)
-        {
-            currentMonth = record.CreatedAt.Month;
-            ocurrencesRecordMonth.Add(new(record.CreatedAt.Month));
-            index++;
-        }
-
-        ocurrencesRecordMonth[index].MonthBalance(record.Amount, record.TypeRecord);
-    }
-
-    return ocurrencesRecordMonth is not null ? Results.Ok(ocurrencesRecordMonth) : Results.NoContent();
+    var filterYear = await ocorrenceRecord.FilterYear(year, account);
+    var data = ocorrenceRecord.FilterMonth(filterYear);
+   
+    return data is not null ? Results.Ok(data.ElementAt(0)) : Results.NoContent();
 });
 
 

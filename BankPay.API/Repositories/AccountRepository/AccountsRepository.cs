@@ -19,7 +19,7 @@ namespace BankPay.API.Repositories.AccountRepository
         {
             account.Balance += amount;
 
-            _bankContext.OcurrenceRecords.Add(new OcurrenceRecord(TypeRecord.Credit, amount, account.Id)); // nao tenho certeza se crio como objeto aqui 
+            _bankContext.OccurrenceRecords.Add(new OcurrenceRecord(TypeRecord.Credit, amount, account.Id)); // nao tenho certeza se crio como objeto aqui 
             return await _bankContext.SaveChangesAsync();
         }
 
@@ -27,7 +27,7 @@ namespace BankPay.API.Repositories.AccountRepository
         {
             account.Balance -= amount;
 
-            _bankContext.OcurrenceRecords.Add(new OcurrenceRecord(TypeRecord.Debit, amount, account.Id)); // nao tenho certeza se crio como objeto aqui
+            _bankContext.OccurrenceRecords.Add(new OcurrenceRecord(TypeRecord.Debit, amount, account.Id)); // nao tenho certeza se crio como objeto aqui
             return await _bankContext.SaveChangesAsync();
         }
 
