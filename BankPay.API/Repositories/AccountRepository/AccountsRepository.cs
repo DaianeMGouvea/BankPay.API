@@ -7,7 +7,6 @@ namespace BankPay.API.Repositories.AccountRepository
 {
     public class AccountsRepository : IAccountsRepository
     {
-
         private readonly BankPayApiContext _bankContext;
 
         public AccountsRepository(BankPayApiContext bankContext)
@@ -37,10 +36,9 @@ namespace BankPay.API.Repositories.AccountRepository
         public async Task<Account>? FindById(int id) =>
             await _bankContext.Accounts.FirstOrDefaultAsync(a => a.Id == id);
 
-        public async Task<Account>? AccountValid(int id, int numberAccount)
+        public async Task<Account>? FindByNumberAccount(int numberAccount)
         {
-            return await _bankContext.Accounts.Where(a => a.Id == id)
-                                              .Where(a => a.NumberAccount == numberAccount)
+            return await _bankContext.Accounts.Where(a => a.NumberAccount == numberAccount)
                                               .FirstOrDefaultAsync();
         }
     }

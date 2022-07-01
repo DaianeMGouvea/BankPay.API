@@ -13,10 +13,9 @@ namespace BankPay.API.Repositories.UsersRepository
             _bankContext = bankContext;
         }
 
-        public async Task<bool> UserExist(User user)
+        public async Task<bool> UserExist(String name)
         {        
-            var userExist = await _bankContext.Users.Where(u => u.Name == user.Name)
-                                            .Where(u => u.Account.Id == user.Account.Id).ToListAsync();
+            var userExist = await _bankContext.Users.Where(u => u.Name == name).ToListAsync();
             return userExist.Any();
         }
 

@@ -23,11 +23,9 @@ namespace BankPay.API.Repositories.OccurrenceRecordRepository
             await _bankContext.Accounts.FirstOrDefaultAsync(a => a.Id == id);
         
 
-        public async Task<Account>? AccountValid(int id, int numberAccount)
+        public async Task<Account>? AccountValid(int numberAccount)
         {
-            return await _bankContext.Accounts.Where(a => a.Id == id)
-                                              .Where(a => a.NumberAccount == numberAccount)
-                                              .FirstOrDefaultAsync();
+            return await _bankContext.Accounts.FirstOrDefaultAsync(a => a.NumberAccount == numberAccount);
         }
 
         public async Task<ICollection<OcurrenceRecord>> FilterYear(int year, Account account)
@@ -48,7 +46,7 @@ namespace BankPay.API.Repositories.OccurrenceRecordRepository
                         {
                             Id = ocr.Key,
                             Credits = ocr.Sum(o => o.TypeRecord == Models.Enums.TypeRecord.Credit ? o.Amount : 0),
-                            Debits = ocr.Sum(o => o.TypeRecord == Models.Enums.TypeRecord.Debit ? o.Amount : 0),
+                            Debits  = ocr.Sum(o => o.TypeRecord == Models.Enums.TypeRecord.Debit ? o.Amount : 0),
                             Balance = (ocr.Sum(o => o.TypeRecord == Models.Enums.TypeRecord.Credit ? o.Amount : 0)
                                       - ocr.Sum(o => o.TypeRecord == Models.Enums.TypeRecord.Debit ? o.Amount : 0))
                         };
