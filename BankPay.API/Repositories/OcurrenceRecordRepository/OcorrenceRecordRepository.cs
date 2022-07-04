@@ -13,24 +13,22 @@ namespace BankPay.API.Repositories.OccurrenceRecordRepository
             _bankContext = bankContext;
         }
 
-        public async Task<ICollection<OcurrenceRecord>> GetOcurrencesRecord(int id) =>
+        public async Task<IEnumerable<OcurrenceRecord>> GetOcurrencesRecord(int id) =>
             await _bankContext.OccurrenceRecords.Where(o => o.AccountId == id).ToListAsync();
 
-        public async Task<ICollection<OcurrenceRecord>> Statement(int id) =>
+        public async Task<IEnumerable<OcurrenceRecord>> Statement(int id) =>
             await GetOcurrencesRecord(id);
 
         public async Task<Account>? FindAccountById(int id) =>  
             await _bankContext.Accounts.FirstOrDefaultAsync(a => a.Id == id);
         
 
-        public async Task<Account>? AccountValid(int id, int numberAccount)
+        public async Task<Account>? AccountValid(int numberAccount)
         {
-            return await _bankContext.Accounts.Where(a => a.Id == id)
-                                              .Where(a => a.NumberAccount == numberAccount)
-                                              .FirstOrDefaultAsync();
+            return await _bankContext.Accounts.FirstOrDefaultAsync(a => a.NumberAccount == numberAccount);
         }
 
-        public async Task<ICollection<OcurrenceRecord>> FilterYear(int year, Account account)
+        public async Task<IEnumerable<OcurrenceRecord>> FilterYear(int year, Account account)
         {
 
             var filteredYear = await _bankContext.OccurrenceRecords.Where(o => o.CreatedAt.Year == year)
@@ -40,21 +38,20 @@ namespace BankPay.API.Repositories.OccurrenceRecordRepository
 
         }
 
-        public ICollection<dynamic> FilterMonth(ICollection<OcurrenceRecord> listOccurrenceRecords)
+        public IEnumerable<dynamic> FilterMonth(IEnumerable<OcurrenceRecord> listOccurrenceRecords)
         {
             var query = from o in listOccurrenceRecords
                         group o by o.CreatedAt.Month into ocr
                         select new
                         {
-                            Id = ocr.Key,
+                            Month = ocr.Key,
                             Credits = ocr.Sum(o => o.TypeRecord == Models.Enums.TypeRecord.Credit ? o.Amount : 0),
-                            Debits = ocr.Sum(o => o.TypeRecord == Models.Enums.TypeRecord.Debit ? o.Amount : 0),
+                            Debits  = ocr.Sum(o => o.TypeRecord == Models.Enums.TypeRecord.Debit ? o.Amount : 0),
                             Balance = (ocr.Sum(o => o.TypeRecord == Models.Enums.TypeRecord.Credit ? o.Amount : 0)
                                       - ocr.Sum(o => o.TypeRecord == Models.Enums.TypeRecord.Debit ? o.Amount : 0))
                         };
 
-            List<dynamic> filteredMonth= new() { query };
-            return filteredMonth;
+            return query;
         }    
     }
 }
