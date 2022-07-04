@@ -66,7 +66,7 @@ void MapActions(WebApplication app)
         return user is not null ? Results.Ok(user) : Results.NotFound();
 
     }).Produces<Account>(StatusCodes.Status200OK)
-      .Produces(StatusCodes.Status404NotFound); ;
+      .Produces(StatusCodes.Status404NotFound);
 
     app.MapPost("v1/Users", async (UserPostModel user, IUsersRepository usersRepository) =>
     {
@@ -140,9 +140,9 @@ void MapActions(WebApplication app)
             return Results.BadRequest("Invalid account number!");
 
         var addCredit = await accountRepository.AddCredit(accountValid, account.Amount);
-        return addCredit > 0 ? Results.Ok(accountValid) : Results.BadRequest("Unexpected error! Add Credits failed!");
+        return addCredit > 0 ? Results.Ok(accountValid.OccurrenceRecords) : Results.BadRequest("Unexpected error! Add Credits failed!");
 
-    }).Produces<Account>(StatusCodes.Status200OK)
+    }).Produces<OcurrenceRecord>(StatusCodes.Status200OK)
       .Produces(StatusCodes.Status400BadRequest)
       .Produces(StatusCodes.Status404NotFound);
 
@@ -154,9 +154,9 @@ void MapActions(WebApplication app)
 
 
         var withdraw = await accountRepository.Withdraw(accountValid, account.Amount);
-        return withdraw > 0 ? Results.Ok(accountValid) : Results.BadRequest("Unexpected error! Add Credits failed!");
+        return withdraw > 0 ? Results.Ok(accountValid.OccurrenceRecords) : Results.BadRequest("Unexpected error! Add Credits failed!");
 
-    }).Produces<Account>(StatusCodes.Status200OK)
+    }).Produces<OcurrenceRecord>(StatusCodes.Status200OK)
       .Produces(StatusCodes.Status400BadRequest)
       .Produces(StatusCodes.Status404NotFound);
 
