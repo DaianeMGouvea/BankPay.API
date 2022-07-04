@@ -186,7 +186,7 @@ void MapActions(WebApplication app)
         var filterYear = await ocorrenceRecord.FilterYear(year, accountValid);
         var data = ocorrenceRecord.FilterMonth(filterYear);
 
-        return data is not null ? Results.Ok(data.ElementAt(0)) : Results.NoContent();
+        return data is not null ? Results.Ok(data) : Results.NoContent();
 
     }).Produces<OcurrenceRecord>(StatusCodes.Status200OK)
       .Produces(StatusCodes.Status204NoContent)
