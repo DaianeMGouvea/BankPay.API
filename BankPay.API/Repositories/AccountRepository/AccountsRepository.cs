@@ -26,7 +26,7 @@ namespace BankPay.API.Repositories.AccountRepository
         {
             account.Balance -= amount;
 
-            var record = new OcurrenceRecord(TypeRecord.Credit, amount, account.Id);
+            var record = new OcurrenceRecord(TypeRecord.Debit, amount, account.Id);
             _bankContext.OccurrenceRecords.Add(record);
             return await _bankContext.SaveChangesAsync();
         }
