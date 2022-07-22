@@ -75,7 +75,7 @@ void MapActions(WebApplication app)
             return Results.BadRequest("User already registered!");
 
         var data = await usersRepository.AddUser(new User(user));
-        return data is not null ? Results.Ok(data) : Results.NotFound();
+        return data > 0 ? Results.Ok("User has been created") : Results.BadRequest("Unexpected error! User created failed");
 
     }).Produces<Account>(StatusCodes.Status200OK)
       .Produces(StatusCodes.Status404NotFound);

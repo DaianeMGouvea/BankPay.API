@@ -19,11 +19,10 @@ namespace BankPay.API.Repositories.UsersRepository
             return userExist.Any();
         }
 
-        public async Task<ICollection<User>> AddUser(User user)
+        public async Task<int> AddUser(User user)
         {
-            _bankContext.Add(user);
-            _bankContext.SaveChangesAsync();
-            return await _bankContext.Users.ToListAsync();
+            _bankContext.Add(user);         
+            return await _bankContext.SaveChangesAsync();
         }
 
         public async Task<int> Update(User user)
