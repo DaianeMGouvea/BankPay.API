@@ -13,11 +13,14 @@ namespace BankPay.API.Repositories.OccurrenceRecordRepository
             _bankContext = bankContext;
         }
 
-        public async Task<IEnumerable<OcurrenceRecord>> GetOcurrencesRecord(int id) =>
+        public async Task<IEnumerable<OcurrenceRecord>> GetOcurrenceById(int id) =>
             await _bankContext.OccurrenceRecords.Where(o => o.AccountId == id).ToListAsync();
 
+        public async Task<IEnumerable<OcurrenceRecord>> GetOcurrencesRecord() =>
+            await _bankContext.OccurrenceRecords.ToListAsync();
+
         public async Task<IEnumerable<OcurrenceRecord>> Statement(int id) =>
-            await GetOcurrencesRecord(id);
+            await GetOcurrenceById(id);
 
         public async Task<Account>? FindAccountById(int id) =>  
             await _bankContext.Accounts.FirstOrDefaultAsync(a => a.Id == id);

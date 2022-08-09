@@ -70,7 +70,7 @@ void MapActions(WebApplication app)
 
     app.MapPost("v1/Users", async (UserPostModel user, IUsersRepository usersRepository) =>
     {
-        bool userExist = await usersRepository.UserExist(user.Name);
+        bool userExist = await usersRepository.UserExist(user.Cpf);
         if (userExist)
             return Results.BadRequest("User already registered!");
 
@@ -162,6 +162,13 @@ void MapActions(WebApplication app)
 
 
     // OccurrenceRecords ------------------------------------------------------------------------------
+
+    app.MapGet("v1/OcurrencesRecord", async (IOccurrenceRecordRepository ocorrenceRecord) =>
+    {
+        var resp = await ocorrenceRecord.GetOcurrencesRecord();
+        return resp is not null ? Results.Ok(resp) : Results.NoContent();
+    }).Produces<OcurrenceRecord>(StatusCodes.Status200OK)
+      .Produces(StatusCodes.Status204NoContent);
 
     app.MapGet("v1/Accounts/{numberAccount}/OcurrencesRecord/Statement", async (int numberAccount, IOccurrenceRecordRepository ocorrenceRecord) =>
     {

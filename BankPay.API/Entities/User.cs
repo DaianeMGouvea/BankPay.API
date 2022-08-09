@@ -6,6 +6,7 @@ namespace BankPay.API.Models
     {
         public int Id { get; private set; }
         public string Name { get; set; }
+        public string Cpf { get; set; }
         public string Phone { get; set; }
         public Account Account { get; private set; }
 
@@ -20,6 +21,7 @@ namespace BankPay.API.Models
         {
             Name = user.Name;
             Phone = user.Phone;
+            Cpf = user.Cpf;
             Account = new Account(_random);
         }
 
